@@ -74,10 +74,12 @@ struct lg_g710_plus_data {
     struct completion ready; /* ready indicator */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,0)
+#ifdef CONFIG_LEDS_CLASS
     struct g710_led_s {
         struct led_classdev cd;
         struct work_struct work;
     } *m1, *m2, *m3, *mr, *keys, *wasd;
+#endif
 #endif
 };
 
@@ -195,6 +197,7 @@ static void hidhw_request(struct hid_device *hdev, struct hid_report *report, en
 
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,0)
+#ifdef CONFIG_LEDS_CLASS
 static int brightness_set_sync(struct led_classdev *led_cdev,
                             enum led_brightness brightness);
 
@@ -211,6 +214,7 @@ static void brightness_set(struct led_classdev *led_cdev,
     led_cdev->brightness = brightness;
     schedule_work(&led->work);
 }
+#endif
 #endif
 
 
@@ -239,6 +243,7 @@ static int lg_g710_plus_initialize(struct hid_device *hdev) {
     ret= sysfs_create_group(&hdev->dev.kobj, &data->attr_group);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,0)
+#ifdef CONFIG_LEDS_CLASS
 #define SETUP_LED(x, color, max) {                                      \
         int name_sz = strlen(dev_name(&data->input_dev->dev))           \
             + strlen(#color) + strlen(#x) + 3;                          \
@@ -275,6 +280,7 @@ static int lg_g710_plus_initialize(struct hid_device *hdev) {
     SETUP_LED(mr, red, 1);
     SETUP_LED(keys, white, 4);
     SETUP_LED(wasd, white, 4);
+#endif
 #endif
     
     return ret;
@@ -350,6 +356,7 @@ static void lg_g710_plus_remove(struct hid_device *hdev)
     struct list_head *feature_report_list = &hdev->report_enum[HID_FEATURE_REPORT].report_list;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,0)
+#ifdef CONFIG_LEDS_CLASS
     if (data != NULL) {
         if (data->m1) {
             led_classdev_unregister(&data->m1->cd);
@@ -370,6 +377,7 @@ static void lg_g710_plus_remove(struct hid_device *hdev)
             led_classdev_unregister(&data->wasd->cd);
         }
     }
+#endif
 #endif
 
     if (data != NULL && !list_empty(feature_report_list))
@@ -451,6 +459,7 @@ static ssize_t lg_g710_plus_store_led_keys(struct device *device, struct device_
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,6,0)
+#ifdef CONFIG_LEDS_CLASS
 static int brightness_set_sync(struct led_classdev *led_cdev,
                         enum led_brightness brightness) {
 	struct device *dev = led_cdev->dev->parent;
@@ -519,6 +528,7 @@ static int brightness_set_sync(struct led_classdev *led_cdev,
 
     return 0;
 }
+#endif
 #endif
 
 static const struct hid_device_id lg_g710_plus_devices[] = {
